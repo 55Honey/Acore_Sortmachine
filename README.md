@@ -23,20 +23,31 @@ Add this script to your `../bin/release/lua_scripts/` directory.
 
 ## Settings in the .lua file:
 
-ConsoleOnly = true
+`ConsoleOnly = true`
+
 If this is true the .sortguid command will not work ingame but only from the world server console
 
-MinGMRank = 4
+
+`MinGMRank = 4`
+
 Staff must have at least this rank to use `.sortguid`
 
-PrintProgress = 1000
+
+`PrintProgress = 1000`
+
 How often the console or chat should print progression. 1000 means every 1000th item. Skipped or written doesn't matter, both are counted.
 
-ChangeCustom = false
+
+`ChangeCustom = false`
+
 If there is a custom table e.g. from a transmog module this must be set to true or all affected items will be lost/bugged
 
-CustomTableName = "Insert_table_name_here"
+
+`CustomTableName = "Insert_table_name_here"`
+
 Make this your custom tables name.
 
-CustomColumnName = "Insert_column_name_here"
+
+`CustomColumnName = "Insert_column_name_here"`
+
 Make this your custom tables column with the items guid to change.
