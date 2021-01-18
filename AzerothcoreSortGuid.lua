@@ -69,11 +69,11 @@ local function Sortguid(event, player, command)
 			
             if player then
 				if ToInteger(SortCounter / PrintProgress) == tonumber(SortCounter / PrintProgress) then
-					player:SendBroadcastMessage("Progressing guid: "..SortCounter)
+					player:SendBroadcastMessage("Progressing guid: "..SortCounter.." / "..ItemCounter)
 				end	
 			else
 				if ToInteger(SortCounter / PrintProgress) == tonumber(SortCounter / PrintProgress) then
-					print("Progressing guid: "..SortCounter)
+					print("Progressing guid: "..SortCounter.." / "..ItemCounter)
 				end	
 			end
 			::skip::
