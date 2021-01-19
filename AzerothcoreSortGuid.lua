@@ -64,7 +64,7 @@ local function Sortguid(event, player, command)
 			end
 			
 			if ChangeCustom == true then
-				CharDBExecute("UPDATE "..CustomTableName.." SET "CustomColumnName.."="..SortCounter.." WHERE "..CustomColumnName.."="..itemsGuidArrayLUA[SortCounter])
+				CharDBExecute("UPDATE "..CustomTableName.." SET "..CustomColumnName.."="..SortCounter.." WHERE "..CustomColumnName.."="..itemsGuidArrayLUA[SortCounter])
 			end
 			
             if player then
