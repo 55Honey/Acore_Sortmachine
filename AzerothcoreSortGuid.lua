@@ -14,7 +14,7 @@
 
 ConsoleOnly = true								-- if true the .sortguid command will not work ingame
 MinGMRank = 4									-- staff must have at least this rank to use .sortguid
-PrintProgress = 1000							-- how often the console or chat should print progression. 1000 means every 1000th item
+PrintProgress = 1							-- how often the console or chat should print progression. 1000 means every 1000th item
 ChangeCustom = false							-- Is there a custom table e.g. from a transmog module to sort as well?
 CustomTableName = "Insert_table_name_here"		-- make this your custom tables name
 CustomColumnName = "Insert_column_name_here"	-- make this your custom tables column with the guid to change
@@ -46,25 +46,31 @@ local function Sortguid(event, player, command)
         repeat
 		
 			if SortCounter == itemsGuidArrayLUA[SortCounter] then	-- if the line is already in the right place dont bother writing again
+				print("Skipping: "..SortCounter
 				goto skip
 			end	
 			
             -- Sort item guids
 			CharDBExecute("UPDATE item_instance SET guid="..SortCounter.." WHERE guid="..itemsGuidArrayLUA[SortCounter])
+			print("UPDATE item_instance SET guid="..SortCounter.." WHERE guid="..itemsGuidArrayLUA[SortCounter])
             
 			-- adjust item references in player inventory
 			CharDBExecute("UPDATE character_inventory SET item="..SortCounter.." WHERE item="..itemsGuidArrayLUA[SortCounter])
+			print("UPDATE character_inventory SET item="..SortCounter.." WHERE item="..itemsGuidArrayLUA[SortCounter])
 			
 			-- adjust item references in guild banks
 			CharDBExecute("UPDATE guild_bank_item SET item_guid="..SortCounter.." WHERE item_guid="..itemsGuidArrayLUA[SortCounter])
+			print("UPDATE guild_bank_item SET item_guid="..SortCounter.." WHERE item_guid="..itemsGuidArrayLUA[SortCounter])
 			
 			-- adjust bag references in player inventory, if the item is a bag
 			if has_value(listOfBags, itemsGuidArrayLUA[SortCounter]) then
 				CharDBExecute("UPDATE character_inventory SET bag="..SortCounter.." WHERE bag="..itemsGuidArrayLUA[SortCounter])
+				print("UPDATE character_inventory SET bag="..SortCounter.." WHERE bag="..itemsGuidArrayLUA[SortCounter])
 			end
 			
 			if ChangeCustom == true then
 				CharDBExecute("UPDATE "..CustomTableName.." SET "..CustomColumnName.."="..SortCounter.." WHERE "..CustomColumnName.."="..itemsGuidArrayLUA[SortCounter])
+				print("UPDATE "..CustomTableName.." SET "..CustomColumnName.."="..SortCounter.." WHERE "..CustomColumnName.."="..itemsGuidArrayLUA[SortCounter])
 			end
 			
             if player then
@@ -95,7 +101,7 @@ function QueryItemInstance(player)	--get Data from the DB, pass it to Lua arrays
 	if itemsArraySQL then
         repeat
             itemsGuidArrayLUA[ItemCounter] = itemsArraySQL:GetUInt32(0)
-			--print("Reading item"..ItemCounter..": "..itemsGuidArrayLUA[ItemCounter])
+			print("Reading #item "..ItemCounter.." with guid: "..itemsGuidArrayLUA[ItemCounter])
             ItemCounter = ItemCounter + 1
         until not itemsArraySQL:NextRow()
     end
@@ -111,9 +117,10 @@ function QueryItemInstance(player)	--get Data from the DB, pass it to Lua arrays
 	if itemsArraySQL then
         repeat
             characterBagArrayLUA[n] = itemsArraySQL:GetUInt32(0)
-			--print("Reading bag"..n..": "..itemsGuidArrayLUA[n])
+			print("Reading bag"..n..": "..itemsGuidArrayLUA[n])
 			if characterBagArrayLUA[n] ~= 0 and not has_value(listOfBags, characterBagArrayLUA[n]) then
 				table.insert (listOfBags, characterBagArrayLUA[n])				-- make a list of all bags item guids
+				print("Added to list of bags: "..characterBagArrayLUA[n])
 			end
             n = n + 1
         until not itemsArraySQL:NextRow()
