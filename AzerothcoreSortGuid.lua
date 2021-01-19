@@ -46,7 +46,7 @@ local function Sortguid(event, player, command)
         repeat
 		
 			if SortCounter == itemsGuidArrayLUA[SortCounter] then	-- if the line is already in the right place dont bother writing again
-				print("Skipping: "..SortCounter
+				print("Skipping: "..SortCounter)
 				goto skip
 			end	
 			
