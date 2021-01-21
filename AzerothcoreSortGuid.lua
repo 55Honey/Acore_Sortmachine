@@ -45,6 +45,7 @@ local function Sortguid(event, player, command)
     local SortCounter = 1
 	
 	local sqlfile = io.open("SortGuid.sql", "w+")
+	sqlfile:write("SET SQL_SAFE_UPDATES = 0;\n")
 
     if command == "sortguid" then
         QueryItemInstance(player)                      			--get Data from the DB, pass it to itemsGuidArrayLUA[row]
@@ -98,6 +99,7 @@ local function Sortguid(event, player, command)
         until SortCounter == ItemCounter
     end
 	itemsGuidArrayLUA = nil			-- free memory
+	sqlfile:write("SET SQL_SAFE_UPDATES = 1;\n")
 	sqlfile:close()
 	print("Script .sortguid is done! Check SortGuid.sql in your worldserver.exe directory.")
 	return false
