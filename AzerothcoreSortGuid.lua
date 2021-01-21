@@ -117,6 +117,7 @@ function QueryItemInstance(player)	--get Data from the DB, pass it to Lua arrays
             ItemCounter = ItemCounter + 1
         until not itemsArraySQL:NextRow()
     end
+	table.sort(itemsGuidArrayLUA)
 	itemsArraySQL = nil		-- free memory
 	
 	--get the character_inventory tables bag column
@@ -131,7 +132,7 @@ function QueryItemInstance(player)	--get Data from the DB, pass it to Lua arrays
             characterBagArrayLUA[n] = itemsArraySQL:GetUInt32(0)
 			--print("Reading bag"..n..": "..itemsGuidArrayLUA[n])
 			if characterBagArrayLUA[n] ~= 0 and not has_value(listOfBags, characterBagArrayLUA[n]) then
-				table.insert (listOfBags, characterBagArrayLUA[n])				-- make a list of all bags item guids
+				table.insert(listOfBags, characterBagArrayLUA[n])				-- make a list of all bags item guids
 			end
             n = n + 1
         until not itemsArraySQL:NextRow()
