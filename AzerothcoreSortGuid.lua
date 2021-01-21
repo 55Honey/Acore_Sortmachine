@@ -7,18 +7,21 @@
 -- Originally created by Honey for Azerothcore
 -- requires ElunaLua module
 
+CustomTableNames = {}
+CustomColumnNames = {}
 
+-- This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item and possibly customs
+-- to start from 1, counting up without gaps and create a file named "sortguid.sql" in your worldserver.exe directory.
+-- Do not run this script/command while players are active.
 
--- This script is supposed to alter your unique guid's in item_instance and their references in character_inventory, guild_bank_item and possibly customs
--- to start from 1, counting up without gaps. Do not run this script/command while players are active.
-
-ConsoleOnly = true								-- if true the .sortguid command will not work ingame
-MinGMRank = 4									-- staff must have at least this rank to use .sortguid
-PrintProgress = 1000							-- how often the console or chat should print progression. 1000 means every 1000th item
-ChangeCustom = false							-- Is there a custom table e.g. from a transmog module to sort as well?
-CustomTableName = "Insert_table_name_here"		-- make this your custom tables name
-CustomColumnName = "Insert_column_name_here"	-- make this your custom tables column with the guid to change
-
+ConsoleOnly = true										-- if true the .sortguid command will not work ingame
+MinGMRank = 4											-- staff must have at least this rank to use .sortguid
+PrintProgress = 1000									-- how often the console or chat should print progression. 1000 means every 1000th item
+ChangeCustom = false									-- Is there a custom table e.g. from a transmog module to sort as well? Practically unlimited number possible.
+--table.insert(CustomTableNames, 1, "Test_table1")		-- add a custom table1 to the list
+--table.insert(CustomColumnNames, 1, "Test_column1")	-- add a custom column for table1 to the list
+--table.insert(CustomTableNames, 2, "Test_table2")		-- add a custom table2 to the list
+--table.insert(CustomColumnNames, 2, "Test_column2")	-- add a custom column for table2 to the list
 
 ------------------------------------------
 -- NO ADJUSTMENTS REQUIRED BELOW THIS LINE
@@ -40,6 +43,8 @@ local function Sortguid(event, player, command)
 	end	
 	
     local SortCounter = 1
+	
+	local sqlfile = io.open("SortGuid.sql", "w+")
 
     if command == "sortguid" then
         QueryItemInstance(player)                      			--get Data from the DB, pass it to itemsGuidArrayLUA[row]
@@ -49,22 +54,34 @@ local function Sortguid(event, player, command)
 				goto skip
 			end	
 			
+			-- Write to the SQL script:			
+			
             -- Sort item guids
-			CharDBExecute("UPDATE item_instance SET guid="..SortCounter.." WHERE guid="..itemsGuidArrayLUA[SortCounter])
-            
+			sqlfile:write("UPDATE item_instance SET guid="..SortCounter.." WHERE guid="..itemsGuidArrayLUA[SortCounter]..";\n")
+			            
 			-- adjust item references in player inventory
-			CharDBExecute("UPDATE character_inventory SET item="..SortCounter.." WHERE item="..itemsGuidArrayLUA[SortCounter])
+			sqlfile:write("UPDATE character_inventory SET item="..SortCounter.." WHERE item="..itemsGuidArrayLUA[SortCounter]..";\n")
 			
 			-- adjust item references in guild banks
-			CharDBExecute("UPDATE guild_bank_item SET item_guid="..SortCounter.." WHERE item_guid="..itemsGuidArrayLUA[SortCounter])
+			sqlfile:write("UPDATE guild_bank_item SET item_guid="..SortCounter.." WHERE item_guid="..itemsGuidArrayLUA[SortCounter]..";\n")
 			
 			-- adjust bag references in player inventory, if the item is a bag
 			if has_value(listOfBags, itemsGuidArrayLUA[SortCounter]) then
-				CharDBExecute("UPDATE character_inventory SET bag="..SortCounter.." WHERE bag="..itemsGuidArrayLUA[SortCounter])
+				sqlfile:write("UPDATE character_inventory SET bag="..SortCounter.." WHERE bag="..itemsGuidArrayLUA[SortCounter]..";\n")
 			end
 			
 			if ChangeCustom == true then
-				CharDBExecute("UPDATE "..CustomTableName.." SET "..CustomColumnName.."="..SortCounter.." WHERE "..CustomColumnName.."="..itemsGuidArrayLUA[SortCounter])
+				for diggit,_ in ipairs(CustomTableNames) do
+					if CustomTableNames[diggit] ~= nil and CustomColumnNames[diggit] ~= nil then
+						sqlfile:write("UPDATE "..CustomTableNames[diggit].." SET "..CustomColumnNames[diggit].."="..SortCounter.." WHERE "..CustomColumnNames[diggit].."="..itemsGuidArrayLUA[SortCounter]..";\n")
+					else
+						if player then
+							player:SendBroadcastMessage("Error in CostumTableNames or CustomColumnNames: "..diggit..)
+						else
+							print("Error in CostumTableNames or CustomColumnNames: "..diggit..)
+						end	
+					end
+				end	
 			end
 			
             if player then
@@ -81,6 +98,7 @@ local function Sortguid(event, player, command)
         until SortCounter == ItemCounter
     end
 	itemsGuidArrayLUA = nil			-- free memory
+	sqlfile:close()
 	print("Script .sortguid is done!")
 	return false
 end

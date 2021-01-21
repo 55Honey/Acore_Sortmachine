@@ -4,10 +4,10 @@
 
 Please report your findings if you try it. Thank you!
 
-This script is supposed to alter your unique guid's in item_instance and their references in character_inventory, guild_bank_item and possibly customs.
-It's purpose is to close gaps in case the servers #item_guid closes in on 4b.
+This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item and possibly customs,
+to start from 1, counting up without gaps and create a file named "sortguid.sql" in your worldserver.exe directory.
 
-Running it repeatedly will skip executing SQL commands on already sorted items, until a single gap is occured.
+Running it repeatedly will skip creating SQL commands on already sorted items, until a single gap is occured in the servers db.
 
 
 ## Requirements:
@@ -19,7 +19,6 @@ Add this script to your `../bin/release/lua_scripts/` directory.
 
 - Run the worldserver standalone. Do **not** have players on the server. Do not have anything active which could potentially create items.
 - Type `.sortguid` into the console (recommended) or optionaly on an ingame client with sufficient rights.
-- Bring time. Local tests on a modern i9 with ssd ran for a split of a second with 1000guids while running this on a remote vps with hdd took 8 hours for ~1mil guids
 
 ## Settings in the .lua file:
 
@@ -43,11 +42,7 @@ How often the console or chat should print progression. 1000 means every 1000th 
 If there is a custom table e.g. from a transmog module this must be set to true or all affected items will be lost/bugged
 
 
-`CustomTableName = "Insert_table_name_here"`
+`table.insert(CustomTableNames, 1, "Test_table1")`
+`table.insert(CustomColumnNames, 1, "Test_column1")`
 
-Make this your custom tables name.
-
-
-`CustomColumnName = "Insert_column_name_here"`
-
-Make this your custom tables column with the items guid to change.
+Insert your custom tables name and column here. You can add an unlimited (in theory) number of custom spots, as long as there is a column and a table for each custom spot.
