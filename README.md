@@ -4,10 +4,7 @@
 
 Please report your findings if you try it. Thank you!
 
-This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item and possibly customs,
-to start from 1, counting up without gaps and create a file named "sortguid.sql" in your worldserver.exe directory.
-
-Running it repeatedly will skip creating SQL commands on already sorted items, until a single gap is occured in the servers db.
+This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item and possibly customs, to start from 1, counting up without gaps and create a file named **"sortguid.sql"** in your worldserver.exe directory. Running it repeatedly will skip creating SQL commands on already sorted items, until a single gap is occured in the servers db.
 
 
 ## Requirements:
@@ -15,10 +12,12 @@ Running it repeatedly will skip creating SQL commands on already sorted items, u
 Compile your [Azerothcore](https://github.com/azerothcore/azerothcore-wotlk) with [Eluna Lua](https://www.azerothcore.org/catalogue-details.html?id=131435473).
 Add this script to your `../bin/release/lua_scripts/` directory.
 
+
 ## Usage:
 
 - Run the worldserver standalone. Do **not** have players on the server. Do not have anything active which could potentially create items.
 - Type `.sortguid` into the console (recommended) or optionaly on an ingame client with sufficient rights.
+
 
 ## Settings in the .lua file:
 
