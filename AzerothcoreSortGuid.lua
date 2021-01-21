@@ -76,9 +76,9 @@ local function Sortguid(event, player, command)
 						sqlfile:write("UPDATE "..CustomTableNames[diggit].." SET "..CustomColumnNames[diggit].."="..SortCounter.." WHERE "..CustomColumnNames[diggit].."="..itemsGuidArrayLUA[SortCounter]..";\n")
 					else
 						if player then
-							player:SendBroadcastMessage("Error in CostumTableNames or CustomColumnNames: "..diggit..)
+							player:SendBroadcastMessage("Error in CostumTableNames or CustomColumnNames: "..diggit)
 						else
-							print("Error in CostumTableNames or CustomColumnNames: "..diggit..)
+							print("Error in CostumTableNames or CustomColumnNames: "..diggit)
 						end	
 					end
 				end	
@@ -99,7 +99,7 @@ local function Sortguid(event, player, command)
     end
 	itemsGuidArrayLUA = nil			-- free memory
 	sqlfile:close()
-	print("Script .sortguid is done!")
+	print("Script .sortguid is done! Check SortGuid.sql in your worldserver.exe directory.")
 	return false
 end
 
