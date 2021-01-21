@@ -1,10 +1,10 @@
 # Acore_Sortmachine
 
-**This is total BETA. Make sure you have decent backups! Do not run it on a live server.**
+**Make sure you have decent backups! Do not run the .SQL file it produces on a live server.**
 
 Please report your findings if you try it. Thank you!
 
-This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item and possibly customs, to start from 1, counting up without gaps and create a file named **"sortguid.sql"** in your worldserver.exe directory. Running it repeatedly will skip creating SQL commands on already sorted items, until a single gap is occured in the servers db.
+This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item and possibly customs, then create a sql script named **"sortguid.sql"** in your worldserver.exe directory which sorts items to start from 1, counting up without gaps. Running it repeatedly will skip creating SQL commands on already sorted items, until a single gap is occured in the servers db.
 
 
 ## Requirements:
