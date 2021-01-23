@@ -134,6 +134,7 @@ function WriteSQL()
 			end
 		end
 
+		::skip::
 		if player then
 			if ToInteger(SortCounter / PrintProgress) == tonumber(SortCounter / PrintProgress) then
 				player:SendBroadcastMessage("Progressing guid: "..SortCounter.." / "..ItemCounter)						-- print progress (ingame if script started from a client) every so often depending on PrintProgress
@@ -144,7 +145,6 @@ function WriteSQL()
 			end
 		end
 
-		::skip::
 		SortCounter = SortCounter + 1
 
 	until SortCounter == ItemCounter
