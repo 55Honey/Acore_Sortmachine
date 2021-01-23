@@ -42,7 +42,7 @@ local function Sortguid(event, player, command)
     	if player:GetGMRank() < MinGMRank then return end																-- make sure the staff is properly ranked
 	end
 
-	local SortCounter = 1
+	SortCounter = 1
 	if command == "sortguid" then
 		QueryItemInstance(player)                      																	-- get Data from the DB, pass it to itemsGuidArrayLUA[row]
 		WriteSQL()
