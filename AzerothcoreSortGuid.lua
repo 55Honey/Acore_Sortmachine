@@ -39,7 +39,7 @@ end
 local function Sortguid(event, player, command)
 	if ConsoleOnly and player then return end                                                                           -- this script works only directly from the console if ConsoleOnly is set
 	if player then
-    	if player:GetGMRank() < MinGMRank then return end                                                               -- make sure the staff is properly ranked
+		if player:GetGMRank() < MinGMRank then return end                                                               -- make sure the staff is properly ranked
 	end
 
 	SortCounter = 1
@@ -53,17 +53,17 @@ local function Sortguid(event, player, command)
 end
 
 function QueryItemInstance(player)                                                                                      --get Data from the DB, pass it to Lua arrays
-    ItemCounter = 1
+	ItemCounter = 1
 	itemsGuidArrayLUA = {}
-    print("Reading items from DB...")
+	print("Reading items from DB...")
 	local itemsArraySQL = CharDBQuery("SELECT guid FROM item_instance")                                                 --get the item_instance guid column
 	print("Sorting items in an array...")
 	if itemsArraySQL then
-        repeat
-            itemsGuidArrayLUA[ItemCounter] = itemsArraySQL:GetUInt32(0)
+		repeat
+			itemsGuidArrayLUA[ItemCounter] = itemsArraySQL:GetUInt32(0)
 			ItemCounter = ItemCounter + 1                                                                               --print("Reading item"..ItemCounter..": "..itemsGuidArrayLUA[ItemCounter])
-        until not itemsArraySQL:NextRow()
-    end
+		until not itemsArraySQL:NextRow()
+	end
 	table.sort(itemsGuidArrayLUA)                                                                                       -- sort the guids in the array ascending from lowest
 	itemsArraySQL = nil                                                                                                 -- free memory
 	
