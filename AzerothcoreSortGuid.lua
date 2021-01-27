@@ -37,14 +37,14 @@ local function OnLogin(event, player)
 end
 
 local function Sortguid(event, player, command)
-	if ConsoleOnly and player then return end																			-- this script works only directly from the console if ConsoleOnly is set
+	if ConsoleOnly and player then return end                                                                           -- this script works only directly from the console if ConsoleOnly is set
 	if player then
-    	if player:GetGMRank() < MinGMRank then return end																-- make sure the staff is properly ranked
+    	if player:GetGMRank() < MinGMRank then return end                                                               -- make sure the staff is properly ranked
 	end
 
 	SortCounter = 1
 	if command == "sortguid" then
-		QueryItemInstance(player)                      																	-- get Data from the DB, pass it to itemsGuidArrayLUA[row]
+		QueryItemInstance(player)                                                                                       -- get Data from the DB, pass it to itemsGuidArrayLUA[row]
 		WriteSQL()
 	end
 
@@ -52,44 +52,44 @@ local function Sortguid(event, player, command)
 	return false
 end
 
-function QueryItemInstance(player)																						--get Data from the DB, pass it to Lua arrays
+function QueryItemInstance(player)                                                                                      --get Data from the DB, pass it to Lua arrays
     ItemCounter = 1
 	itemsGuidArrayLUA = {}
     print("Reading items from DB...")
-	local itemsArraySQL = CharDBQuery("SELECT guid FROM item_instance")													--get the item_instance guid column
+	local itemsArraySQL = CharDBQuery("SELECT guid FROM item_instance")                                                 --get the item_instance guid column
 	print("Sorting items in an array...")
 	if itemsArraySQL then
         repeat
             itemsGuidArrayLUA[ItemCounter] = itemsArraySQL:GetUInt32(0)
-			ItemCounter = ItemCounter + 1																				--print("Reading item"..ItemCounter..": "..itemsGuidArrayLUA[ItemCounter])
+			ItemCounter = ItemCounter + 1                                                                               --print("Reading item"..ItemCounter..": "..itemsGuidArrayLUA[ItemCounter])
         until not itemsArraySQL:NextRow()
     end
-	table.sort(itemsGuidArrayLUA)																						-- sort the guids in the array ascending from lowest
-	itemsArraySQL = nil																									-- free memory
+	table.sort(itemsGuidArrayLUA)                                                                                       -- sort the guids in the array ascending from lowest
+	itemsArraySQL = nil                                                                                                 -- free memory
 	
 	local n = 1
 	characterBagArrayLUA = {}
 	listOfBags = {}
 	print("Reading bags from DB...")
-	local itemsArraySQL = CharDBQuery("SELECT bag FROM character_inventory")											--get the character_inventory tables bag column
+	local itemsArraySQL = CharDBQuery("SELECT bag FROM character_inventory")                                            --get the character_inventory tables bag column
 	print("Making a list of all bags guid's...")
 	if itemsArraySQL then
         repeat
             characterBagArrayLUA[n] = itemsArraySQL:GetUInt32(0)
-			if characterBagArrayLUA[n] ~= 0 and not has_value(listOfBags, characterBagArrayLUA[n]) then					--print("Reading bag"..n..": "..itemsGuidArrayLUA[n])
-				table.insert(listOfBags, characterBagArrayLUA[n])														-- make a list of all bags item guids
+			if characterBagArrayLUA[n] ~= 0 and not has_value(listOfBags, characterBagArrayLUA[n]) then                 --print("Reading bag"..n..": "..itemsGuidArrayLUA[n])
+				table.insert(listOfBags, characterBagArrayLUA[n])                                                       -- make a list of all bags item guids
 			end
             n = n + 1
         until not itemsArraySQL:NextRow()
     end
-	itemsArraySQL = nil																									-- free memory
+	itemsArraySQL = nil                                                                                                 -- free memory
 end
 
 function ToInteger(number)
     return math.floor(tonumber(number) or error("Could not cast '" .. tostring(number) .. "' to number.'"))
 end
 
-function has_value (tab, val)
+function has_value (tab, val)                                                                                           -- checks if an array contains a given value
     for index, value in ipairs(tab) do
         if value == val then
             return true
@@ -100,35 +100,35 @@ end
 
 function WriteSQL()
 	local TermToWrite
-	local sqlfile = io.open("SortGuid.sql", "w+")																		-- open and if existant wipe sortguid.sql
-	sqlfile:write("SET SQL_SAFE_UPDATES = 0;\n")																		-- add a sql command which allows for unsafe update commands
+	local sqlfile = io.open("SortGuid.sql", "w+")                                                                       -- open and if existant wipe sortguid.sql
+	sqlfile:write("SET SQL_SAFE_UPDATES = 0;\n")                                                                        -- add a sql command which allows for unsafe update commands
 
 	repeat
 
-		if SortCounter == itemsGuidArrayLUA[SortCounter] then															-- if the line is already in the right place dont bother writing again
+		if SortCounter == itemsGuidArrayLUA[SortCounter] then                                                           -- if the line is already in the right place dont bother writing again
 			goto skip
 		end
 
 		-- Write to the SQL script:
-		sqlfile:write("UPDATE item_instance SET guid="..SortCounter.." WHERE guid="..itemsGuidArrayLUA[SortCounter]..";\n")				-- Sort item guids
-		sqlfile:write("UPDATE character_inventory SET item="..SortCounter.." WHERE item="..itemsGuidArrayLUA[SortCounter]..";\n")		-- adjust item references in player inventory
+		sqlfile:write("UPDATE item_instance SET guid="..SortCounter.." WHERE guid="..itemsGuidArrayLUA[SortCounter]..";\n")             -- Sort item guids
+		sqlfile:write("UPDATE character_inventory SET item="..SortCounter.." WHERE item="..itemsGuidArrayLUA[SortCounter]..";\n")       -- adjust item references in player inventory
 		sqlfile:write("UPDATE guild_bank_item SET item_guid="..SortCounter.." WHERE item_guid="..itemsGuidArrayLUA[SortCounter]..";\n") -- adjust item references in guild banks
 		if has_value(listOfBags, itemsGuidArrayLUA[SortCounter]) then
-			sqlfile:write("UPDATE character_inventory SET bag="..SortCounter.." WHERE bag="..itemsGuidArrayLUA[SortCounter]..";\n")		-- adjust bag references in player inventory, if the item is a bag
+			sqlfile:write("UPDATE character_inventory SET bag="..SortCounter.." WHERE bag="..itemsGuidArrayLUA[SortCounter]..";\n")     -- adjust bag references in player inventory, if the item is a bag
 		end
 
-		if ChangeCustom == true then																					-- if changing custom tables is intended..
+		if ChangeCustom == true then                                                                                    -- if changing custom tables is intended..
 			for diggit,_ in ipairs(CustomTableNames) do
-				if CustomTableNames[diggit] ~= nil and CustomColumnNames[diggit] ~= nil then							-- ..and there is both a table and a column set for the index..
-					TermToWrite = "UPDATE "..CustomTableNames[diggit].." SET "..CustomColumnNames[diggit]				-- ..change the guids in that column as well
+				if CustomTableNames[diggit] ~= nil and CustomColumnNames[diggit] ~= nil then                            -- ..and there is both a table and a column set for the index..
+					TermToWrite = "UPDATE "..CustomTableNames[diggit].." SET "..CustomColumnNames[diggit]               -- ..change the guids in that column as well
 					TermToWrite = TermToWrite.."="..SortCounter.." WHERE "..CustomColumnNames[diggit].."="
 					TermToWrite = TermToWrite..itemsGuidArrayLUA[SortCounter]..";\n"
 					sqlfile:write(TermToWrite)
-				else																									-- if there is a table specified for a certain index, but no column print an error..
+				else                                                                                                    -- if there is a table specified for a certain index, but no column print an error..
 					if player then
-						player:SendBroadcastMessage("Error in CostumTableNames or CustomColumnNames: "..diggit)			-- ..in the clients chat if the script was started from there..
+						player:SendBroadcastMessage("Error in CostumTableNames or CustomColumnNames: "..diggit)         -- ..in the clients chat if the script was started from there..
 					else
-						print("Error in CostumTableNames or CustomColumnNames: "..diggit)								-- ..or in the worldserver console if not.
+						print("Error in CostumTableNames or CustomColumnNames: "..diggit)                               -- ..or in the worldserver console if not.
 					end
 				end
 			end
@@ -137,11 +137,11 @@ function WriteSQL()
 		::skip::
 		if player then
 			if ToInteger(SortCounter / PrintProgress) == tonumber(SortCounter / PrintProgress) then
-				player:SendBroadcastMessage("Progressing guid: "..SortCounter.." / "..ItemCounter)						-- print progress (ingame if script started from a client) every so often depending on PrintProgress
+				player:SendBroadcastMessage("Progressing guid: "..SortCounter.." / "..ItemCounter)                      -- print progress (ingame if script started from a client) every so often depending on PrintProgress
 			end
 		else
 			if ToInteger(SortCounter / PrintProgress) == tonumber(SortCounter / PrintProgress) then
-				print("Progressing guid: "..SortCounter.." / "..ItemCounter)											-- print progress (in console if script started from there) every so often depending on PrintProgress
+				print("Progressing guid: "..SortCounter.." / "..ItemCounter)                                            -- print progress (in console if script started from there) every so often depending on PrintProgress
 			end
 		end
 
@@ -149,8 +149,8 @@ function WriteSQL()
 
 	until SortCounter == ItemCounter
 
-	itemsGuidArrayLUA = nil																								-- free memory
-	sqlfile:write("SET SQL_SAFE_UPDATES = 1;\n")																		-- add a sql command which forbids unsafe update commands after our sql is done
+	itemsGuidArrayLUA = nil                                                                                             -- free memory
+	sqlfile:write("SET SQL_SAFE_UPDATES = 1;\n")                                                                        -- add a sql command which forbids unsafe update commands after our sql is done
 	sqlfile:close()
 end
 
