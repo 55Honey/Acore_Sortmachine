@@ -4,7 +4,9 @@
 
 Please report your findings if you try it. Thank you!
 
-This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item and possibly customs, then create a sql script named **"sortguid.sql"** in your worldserver.exe directory which sorts items to start from 1, counting up without gaps. Running it repeatedly will skip creating SQL commands on already sorted items, until a single gap is occured in the servers db.
+This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item, mail_items and possibly customs, then create a sql script named **"sortguid.sql"** in your worldserver.exe directory which sorts items to start from 1, counting up without gaps. Running it repeatedly will skip creating SQL commands on already sorted items, until a single gap is occured in the servers db.
+
+**Small scale tested and proven working with character backpack + bags, bank, bank bags, guild bank and mail.**
 
 
 ## Requirements:
@@ -14,9 +16,11 @@ Add this script to your `../bin/release/lua_scripts/` directory.
 
 
 ## Usage:
-
+- Close the worldserver to make sure no player has been active since it started and all changes are written to the db.
 - Run the worldserver standalone. Do **not** have players on the server. Do not have anything active which could potentially create items.
 - Type `.sortguid` into the console (recommended) or optionaly on an ingame client with sufficient rights.
+- Close the worldserver
+- Run the "sortguid.sql" file which was created in your directory where worldserver.exe resides.
 
 
 ## Settings in the .lua file:

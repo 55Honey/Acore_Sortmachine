@@ -136,15 +136,17 @@ function WriteSQL()
 
 		-- Write to the SQL script:
 		-- Sort item guids
-		sqlfile:write("UPDATE item_instance SET guid="..SortCounter.." WHERE guid="..itemsGuidArrayLUA[SortCounter]..";\n")
+		sqlfile:write("UPDATE `item_instance` SET `guid` = "..SortCounter.." WHERE `guid` = "..itemsGuidArrayLUA[SortCounter]..";\n")
 		-- adjust item references in player inventory
-		sqlfile:write("UPDATE character_inventory SET item="..SortCounter.." WHERE item="..itemsGuidArrayLUA[SortCounter]..";\n")
+		sqlfile:write("UPDATE `character_inventory` SET `item` = "..SortCounter.." WHERE `item` = "..itemsGuidArrayLUA[SortCounter]..";\n")
 		-- adjust item references in guild banks
-		sqlfile:write("UPDATE guild_bank_item SET item_guid="..SortCounter.." WHERE item_guid="..itemsGuidArrayLUA[SortCounter]..";\n")
+		sqlfile:write("UPDATE `guild_bank_item` SET `item_guid` = "..SortCounter.." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter]..";\n")
+		-- adjust bag references in player inventory, if the item is a bag
 		if has_value(listOfBags, itemsGuidArrayLUA[SortCounter]) then
-			-- adjust bag references in player inventory, if the item is a bag
-			sqlfile:write("UPDATE character_inventory SET bag="..SortCounter.." WHERE bag="..itemsGuidArrayLUA[SortCounter]..";\n")
+			sqlfile:write("UPDATE `character_inventory` SET `bag` = "..SortCounter.." WHERE `bag` = "..itemsGuidArrayLUA[SortCounter]..";\n")
 		end
+		-- adjust mail_items if the item is in a letter
+		sqlfile:write("UPDATE `mail_items` SET `item_guid` = "..SortCounter.." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter]..";\n")
 
 		-- if changing custom tables is intended..
 		if ChangeCustom == true then
@@ -152,8 +154,8 @@ function WriteSQL()
 				-- ..and there is both a table and a column set for the index..
 				if CustomTableNames[diggit] ~= nil and CustomColumnNames[diggit] ~= nil then
 					-- ..then change the guids in that column as well
-					TermToWrite = "UPDATE "..CustomTableNames[diggit].." SET "..CustomColumnNames[diggit]
-					TermToWrite = TermToWrite.."="..SortCounter.." WHERE "..CustomColumnNames[diggit].."="
+					TermToWrite = "UPDATE `"..CustomTableNames[diggit].."` SET `"..CustomColumnNames[diggit]
+					TermToWrite = TermToWrite.."` = "..SortCounter.." WHERE `"..CustomColumnNames[diggit].."` = "
 					TermToWrite = TermToWrite..itemsGuidArrayLUA[SortCounter]..";\n"
 					sqlfile:write(TermToWrite)
 				-- if there is a table specified for a certain index, but no column print an error..
