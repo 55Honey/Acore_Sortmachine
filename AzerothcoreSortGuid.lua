@@ -83,7 +83,7 @@ function QueryItemInstance(player)
 	print("Reading items from DB...")
 	--get the item_instance guid column from the db
 	local itemsArraySQL = CharDBQuery("SELECT guid FROM item_instance")
-	print("Sorting items in an array...")
+	print("Adding items in an array...")
 	if itemsArraySQL then
 		repeat
 			itemsGuidArrayLUA[ItemCounter] = itemsArraySQL:GetUInt32(0)
@@ -91,6 +91,7 @@ function QueryItemInstance(player)
 		until not itemsArraySQL:NextRow() or ItemCounter == ItemLimit + 1
 	end
 	-- sort the guids in the array ascending from lowest
+	print("Sorting item array ascending from 1...")
 	table.sort(itemsGuidArrayLUA)
 	-- free memory
 	itemsArraySQL = nil
