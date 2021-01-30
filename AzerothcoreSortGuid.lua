@@ -14,6 +14,9 @@ CustomColumnNames = {}
 -- guild_bank_item and possibly customs to start from 1, counting up without gaps and create a file named
 -- "sortguid.sql" in your worldserver.exe directory. Do not run this script/command while players are active.
 
+-- scheme name in your DB
+schemename = "acore_characters"
+
 -- if true the .sortguid command will not work ingame
 ConsoleOnly = true
 
@@ -26,9 +29,10 @@ PrintProgress = 1000
 -- Is there a custom table e.g. from a transmog module to sort as well? Practically unlimited number possible.
 ChangeCustom = false
 
+
 -- add a custom table1 and column for it to the list
---table.insert(CustomTableNames, 1, "Test_table1")
---table.insert(CustomColumnNames, 1, "Test_column1")
+--table.insert(CustomTableNames, 1, "custom_transmogrification")
+--table.insert(CustomColumnNames, 1, "GUID")
 
 -- More custom tables and their columns to change are added the same way, just increment the 2nd argument
 --table.insert(CustomTableNames, 2, "Test_table2")
@@ -125,6 +129,8 @@ function WriteSQL()
 	local TermToWrite
 	-- open and if existant wipe sortguid.sql
 	local sqlfile = io.open("SortGuid.sql", "w+")
+	-- choose the right scheme
+	sqlfile:write("USE `"..schemename.."`;")
 	-- add a sql command which allows for unsafe update commands
 	sqlfile:write("SET SQL_SAFE_UPDATES = 0;\n")
 
@@ -136,17 +142,17 @@ function WriteSQL()
 
 		-- Write to the SQL script:
 		-- Sort item guids
-		sqlfile:write("UPDATE `item_instance` SET `guid` = "..SortCounter.." WHERE `guid` = "..itemsGuidArrayLUA[SortCounter]..";\n")
+		sqlfile:write("UPDATE `item_instance` SET `guid` = "..SortCounter.." WHERE `guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 		-- adjust item references in player inventory
-		sqlfile:write("UPDATE `character_inventory` SET `item` = "..SortCounter.." WHERE `item` = "..itemsGuidArrayLUA[SortCounter]..";\n")
+		sqlfile:write("UPDATE `character_inventory` SET `item` = "..SortCounter.." WHERE `item` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 		-- adjust item references in guild banks
-		sqlfile:write("UPDATE `guild_bank_item` SET `item_guid` = "..SortCounter.." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter]..";\n")
+		sqlfile:write("UPDATE `guild_bank_item` SET `item_guid` = "..SortCounter.." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 		-- adjust bag references in player inventory, if the item is a bag
 		if has_value(listOfBags, itemsGuidArrayLUA[SortCounter]) then
-			sqlfile:write("UPDATE `character_inventory` SET `bag` = "..SortCounter.." WHERE `bag` = "..itemsGuidArrayLUA[SortCounter]..";\n")
+			sqlfile:write("UPDATE `character_inventory` SET `bag` = "..SortCounter.." WHERE `bag` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 		end
 		-- adjust mail_items if the item is in a letter
-		sqlfile:write("UPDATE `mail_items` SET `item_guid` = "..SortCounter.." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter]..";\n")
+		sqlfile:write("UPDATE `mail_items` SET `item_guid` = "..SortCounter.." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 
 		-- if changing custom tables is intended..
 		if ChangeCustom == true then

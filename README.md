@@ -25,6 +25,11 @@ Add this script to your `../bin/release/lua_scripts/` directory.
 
 ## Settings in the .lua file:
 
+`schemename = "acore_characters"`
+
+Change this to the name of your character database.
+
+
 `ConsoleOnly = true`
 
 If this is true the .sortguid command will not work ingame but only from the world server console
