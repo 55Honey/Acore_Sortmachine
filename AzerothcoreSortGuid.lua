@@ -133,7 +133,7 @@ function WriteSQL()
 	-- open and if existant wipe sortguid.sql
 	local sqlfile = io.open("SortGuid.sql", "w+")
 	-- choose the right scheme
-	sqlfile:write("USE `"..schemename.."`;")
+	sqlfile:write("USE `"..schemename.."`;/n")
 	-- add a sql command which allows for unsafe update commands
 	sqlfile:write("SET SQL_SAFE_UPDATES = 0;\n")
 	-- check for broken items. remove them if neccesary.
