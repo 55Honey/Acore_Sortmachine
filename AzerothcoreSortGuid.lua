@@ -26,14 +26,16 @@ MinGMRank = 4
 -- How often the console or chat should print progression. 1000 means every 1000th item
 PrintProgress = 1000
 
+-- For testing. Script will stop after the # of items below.
+-- 0 = no limit.
+-- 1 = only fixes, no items
+-- 2+ = # of items to sort
+ItemLimit = 0
+
 -- Is there a custom table e.g. from a transmog module to sort as well? Practically unlimited number possible.
 ChangeCustom = false
 
--- For testing. Script will stop after the # of items below. 0 = no limit.
-ItemLimit = 0
-
-
--- add a custom table1 and column for it to the list
+-- add a custom table and column for it to the list
 --table.insert(CustomTableNames, 1, "custom_transmogrification")
 --table.insert(CustomColumnNames, 1, "GUID")
 
@@ -86,7 +88,7 @@ function QueryItemInstance(player)
 		repeat
 			itemsGuidArrayLUA[ItemCounter] = itemsArraySQL:GetUInt32(0)
 			ItemCounter = ItemCounter + 1
-		until not itemsArraySQL:NextRow() or ItemCounter == ItemLimit
+		until not itemsArraySQL:NextRow() or ItemCounter == ItemLimit + 1
 	end
 	-- sort the guids in the array ascending from lowest
 	table.sort(itemsGuidArrayLUA)
@@ -133,9 +135,11 @@ function WriteSQL()
 	-- open and if existant wipe sortguid.sql
 	local sqlfile = io.open("SortGuid.sql", "w+")
 	-- choose the right scheme
-	sqlfile:write("USE `"..schemename.."`;/n")
+	sqlfile:write("USE `"..schemename.."`;\n")
+	sqlfile:write("\n")
 	-- add a sql command which allows for unsafe update commands
 	sqlfile:write("SET SQL_SAFE_UPDATES = 0;\n")
+	sqlfile:write("\n")
 	-- check for broken items. remove them if neccesary.
 	sqlfile:write("DELETE FROM `character_inventory`\n")
 	sqlfile:write("WHERE NOT EXISTS (\n")
@@ -143,6 +147,7 @@ function WriteSQL()
 	sqlfile:write("  FROM `item_instance`\n")
 	sqlfile:write("  WHERE `guid` = `character_inventory.item`\n")
 	sqlfile:write(");\n")
+	sqlfile:write("\n")
 
 	sqlfile:write("DELETE FROM `guild_bank_item`\n")
 	sqlfile:write("WHERE NOT EXISTS (\n")
@@ -150,6 +155,7 @@ function WriteSQL()
 	sqlfile:write("  FROM `item_instance`\n")
 	sqlfile:write("  WHERE `guid` = `guild_bank_item.item_guid`\n")
 	sqlfile:write(");\n")
+	sqlfile:write("\n")
 
 	sqlfile:write("DELETE FROM `mail_items`\n")
 	sqlfile:write("WHERE NOT EXISTS (\n")
@@ -157,6 +163,7 @@ function WriteSQL()
 	sqlfile:write("  FROM `item_instance`\n")
 	sqlfile:write("  WHERE `guid` = `mail_items.item_guid`\n")
 	sqlfile:write(");\n")
+	sqlfile:write("\n")
 
 	-- if changing custom tables is intended delete broken references in them
 	if ChangeCustom == true then
@@ -168,9 +175,12 @@ function WriteSQL()
 				sqlfile:write("  FROM `item_instance`\n")
 				sqlfile:write("  WHERE `guid` = `"..CustomTableNames[diggit].."."..CustomColumnNames[diggit].."`\n")
 				sqlfile:write(");\n")
+				sqlfile:write("\n")
 			end
 		end
 	end
+
+	if ItemLimit == 1 then goto skip2 end
 
 	repeat
 		-- if the line is already in the right place dont bother writing again
@@ -229,8 +239,10 @@ function WriteSQL()
 		end
 
 		SortCounter = SortCounter + 1
-
+		sqlfile:write("\n")
 	until SortCounter == ItemCounter
+
+	::skip2::
 
 	-- free memory
 	itemsGuidArrayLUA = nil

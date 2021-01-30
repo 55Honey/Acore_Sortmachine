@@ -5,7 +5,9 @@
 Please report your findings if you try it. Thank you!
 
 This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item, mail_items and possibly customs, then create a sql script named **"sortguid.sql"** in your worldserver.exe directory which sorts items to start from 1, counting up without gaps. Running it repeatedly will skip creating SQL commands on already sorted items, until a single gap is occured in the servers db.
-It checks for inconsistencies from broken items and removes all references for non existant item guids in guild_bank_item, mail_items and character_inventory
+It checks for inconsistencies from broken items and removes all references for non existant item guids in guild_bank_item, mail_items and character_inventory.
+
+Alternative use: Set ItemLimit = 1 and run `.sortguid`. This will create a SQL file which does only fixes. No sorting.
 
 **Small scale tested and proven working with character backpack + bags, bank, bank bags, guild bank and mail.**
 
@@ -44,6 +46,13 @@ Staff must have at least this rank to use `.sortguid`
 `PrintProgress = 1000`
 
 How often the console or chat should print progression. 1000 means every 1000th item. Skipped or written doesn't matter, both are counted.
+
+
+`ItemLimit = 0`
+For testing. Script will stop after the # of items below.
+* 0 = no limit
+* 1 = only fixes, no items
+* 2+ = # of items to sort
 
 
 `ChangeCustom = false`
