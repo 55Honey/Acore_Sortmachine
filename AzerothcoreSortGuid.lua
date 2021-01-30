@@ -86,7 +86,7 @@ function QueryItemInstance(player)
 		repeat
 			itemsGuidArrayLUA[ItemCounter] = itemsArraySQL:GetUInt32(0)
 			ItemCounter = ItemCounter + 1
-		until not itemsArraySQL:NextRow() or ItemCounter = ItemLimit
+		until not itemsArraySQL:NextRow() or ItemCounter == ItemLimit
 	end
 	-- sort the guids in the array ascending from lowest
 	table.sort(itemsGuidArrayLUA)
