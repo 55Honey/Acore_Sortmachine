@@ -14,20 +14,23 @@ CustomColumnNames = {}
 -- guild_bank_item and possibly customs to start from 1, counting up without gaps and create a file named
 -- "sortguid.sql" in your worldserver.exe directory. Do not run this script/command while players are active.
 
--- scheme name in your DB
+-- Scheme name in your DB
 schemename = "acore_characters"
 
--- if true the .sortguid command will not work ingame
+-- If true the .sortguid command will not work ingame
 ConsoleOnly = true
 
--- staff must have at least this rank to use .sortguid
+-- Staff must have at least this rank to use .sortguid
 MinGMRank = 4
 
--- how often the console or chat should print progression. 1000 means every 1000th item
+-- How often the console or chat should print progression. 1000 means every 1000th item
 PrintProgress = 1000
 
 -- Is there a custom table e.g. from a transmog module to sort as well? Practically unlimited number possible.
 ChangeCustom = false
+
+-- For testing. Script will stop after the # of items below. 0 = no limit.
+ItemLimit = 0
 
 
 -- add a custom table1 and column for it to the list
@@ -83,7 +86,7 @@ function QueryItemInstance(player)
 		repeat
 			itemsGuidArrayLUA[ItemCounter] = itemsArraySQL:GetUInt32(0)
 			ItemCounter = ItemCounter + 1
-		until not itemsArraySQL:NextRow()
+		until not itemsArraySQL:NextRow() or ItemCounter = ItemLimit
 	end
 	-- sort the guids in the array ascending from lowest
 	table.sort(itemsGuidArrayLUA)
@@ -133,6 +136,41 @@ function WriteSQL()
 	sqlfile:write("USE `"..schemename.."`;")
 	-- add a sql command which allows for unsafe update commands
 	sqlfile:write("SET SQL_SAFE_UPDATES = 0;\n")
+	-- check for broken items. remove them if neccesary.
+	sqlfile:write("DELETE FROM `character_inventory`\n")
+	sqlfile:write("WHERE NOT EXISTS (\n")
+	sqlfile:write("  SELECT *\n")
+	sqlfile:write("  FROM `item_instance`\n")
+	sqlfile:write("  WHERE `guid` = `character_inventory.item`\n")
+	sqlfile:write(");\n")
+
+	sqlfile:write("DELETE FROM `guild_bank_item`\n")
+	sqlfile:write("WHERE NOT EXISTS (\n")
+	sqlfile:write("  SELECT *\n")
+	sqlfile:write("  FROM `item_instance`\n")
+	sqlfile:write("  WHERE `guid` = `guild_bank_item.item_guid`\n")
+	sqlfile:write(");\n")
+
+	sqlfile:write("DELETE FROM `mail_items`\n")
+	sqlfile:write("WHERE NOT EXISTS (\n")
+	sqlfile:write("  SELECT *\n")
+	sqlfile:write("  FROM `item_instance`\n")
+	sqlfile:write("  WHERE `guid` = `mail_items.item_guid`\n")
+	sqlfile:write(");\n")
+
+	-- if changing custom tables is intended delete broken references in them
+	if ChangeCustom == true then
+		for diggit,_ in ipairs(CustomTableNames) do
+			if CustomTableNames[diggit] ~= nil and CustomColumnNames[diggit] ~= nil then
+				sqlfile:write("DELETE FROM `"..CustomTableNames[diggit].."`\n")
+				sqlfile:write("WHERE NOT EXISTS (\n")
+				sqlfile:write("  SELECT *\n")
+				sqlfile:write("  FROM `item_instance`\n")
+				sqlfile:write("  WHERE `guid` = `"..CustomTableNames[diggit].."."..CustomColumnNames[diggit].."`\n")
+				sqlfile:write(");\n")
+			end
+		end
+	end
 
 	repeat
 		-- if the line is already in the right place dont bother writing again

@@ -5,6 +5,7 @@
 Please report your findings if you try it. Thank you!
 
 This script is supposed to read your unique guid's in item_instance and their references in character_inventory, guild_bank_item, mail_items and possibly customs, then create a sql script named **"sortguid.sql"** in your worldserver.exe directory which sorts items to start from 1, counting up without gaps. Running it repeatedly will skip creating SQL commands on already sorted items, until a single gap is occured in the servers db.
+It checks for inconsistencies from broken items and removes all references for non existant item guids in guild_bank_item, mail_items and character_inventory
 
 **Small scale tested and proven working with character backpack + bags, bank, bank bags, guild bank and mail.**
 
