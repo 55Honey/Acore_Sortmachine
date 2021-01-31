@@ -15,7 +15,7 @@ CustomColumnNames = {}
 -- "sortguid.sql" in your worldserver.exe directory. Do not run this script/command while players are active.
 
 -- Scheme name in your DB
-schemename = "acore_characters"
+Schemename = "acore_characters"
 
 -- If true the .sortguid command will not work ingame
 ConsoleOnly = true
@@ -24,6 +24,7 @@ ConsoleOnly = true
 MinGMRank = 4
 
 -- How often the console or chat should print progression. 1000 means every 1000th item
+-- Also affects size of SQL queries when checking gaps
 PrintProgress = 1000
 
 -- For testing. Script will stop after the # of items below.
@@ -31,6 +32,12 @@ PrintProgress = 1000
 -- 1 = only fixes, no items
 -- 2+ = # of items to sort
 ItemLimit = 0
+
+--The lowest item guid to sort
+StartFromGuid = 1
+
+--The lowest guid to scan for gaps
+SearchForGapsFrom = 1
 
 -- Is there a custom table e.g. from a transmog module to sort as well? Practically unlimited number possible.
 ChangeCustom = false
@@ -57,20 +64,45 @@ local function OnLogin(event, player)
 end
 
 local function Sortguid(event, player, command)
-	-- this script works only directly from the console if ConsoleOnly is set
-	if ConsoleOnly and player then return end
-	if player then
-		-- make sure the staff is properly ranked
-		if player:GetGMRank() < MinGMRank then return end
-	end
 
-	SortCounter = 1
 	if command == "sortguid" then
+		-- this script works only directly from the console if ConsoleOnly is set
+		if ConsoleOnly and player then return end
+		if player then
+			-- make sure the staff is properly ranked
+			if player:GetGMRank() < MinGMRank then return end
+		end
+		--make sure config flags are consistent
+		if StartFromGuid < SearchForGapsFrom then
+			print("Please set StartFromGuid higher or equal to SearchForGapsFrom.")
+			return false
+		end
+
+		SortCounter = 1
+		StartTime = GetCurrTime()
 		-- get Data from the DB, pass it to itemsGuidArrayLUA[row]
 		QueryItemInstance(player)
 		-- Write commands to a .SQL file
 		WriteSQL()
 	end
+
+	TotalTime = GetCurrTime()
+
+	Time = QuerySQLTime - StartTime
+	print("SQL Query done after: "..Time.." milliseconds.")
+	Time = CreateItemArrayTime - QuerySQLTime
+	print("Creating item array done after: "..Time.." milliseconds.")
+	Time = SortItemArryTime - CreateItemArrayTime
+	print("Sorting item arry done after: "..Time.." milliseconds.")
+	Time = CreateBagArrayTime - SortItemArryTime
+	print("Creating bag array done after: "..Time.." milliseconds.")
+	Time = CreateGapsArrayTime - CreateBagArrayTime
+	print("Creating gaps array done after: "..Time.." milliseconds.")
+
+
+	Time = TotalTime - StartTime
+	print("Total Time: "..Time.." milliseconds.")
+
 
 	print("Script .sortguid is done! Check SortGuid.sql in your worldserver.exe directory.")
 	return false
@@ -82,18 +114,23 @@ function QueryItemInstance(player)
 	itemsGuidArrayLUA = {}
 	print("Reading items from DB...")
 	--get the item_instance guid column from the db
-	local itemsArraySQL = CharDBQuery("SELECT guid FROM item_instance")
+	local itemsArraySQL = CharDBQuery("SELECT `guid` FROM `item_instance` WHERE `guid` >= "..StartFromGuid)
+	QuerySQLTime = GetCurrTime()
 	print("Adding items in an array...")
 	if itemsArraySQL then
 		repeat
 			itemsGuidArrayLUA[ItemCounter] = itemsArraySQL:GetUInt32(0)
+			-- print("itemsGuidArrayLUA[ItemCounter]: "..itemsGuidArrayLUA[ItemCounter])
 			ItemCounter = ItemCounter + 1
 		until not itemsArraySQL:NextRow() or ItemCounter == ItemLimit + 1
 	end
+	CreateItemArrayTime = GetCurrTime()
 	-- sort the guids in the array ascending from lowest
 	print("Sorting item array ascending from 1...")
 	table.sort(itemsGuidArrayLUA)
-	-- free memory
+	SortItemArryTime = GetCurrTime()
+	-- for n, _ in ipairs(itemsGuidArrayLUA) do print(itemsGuidArrayLUA[n]) end
+	-- free memory and reset array with sql data
 	itemsArraySQL = nil
 	
 	local n = 1
@@ -104,17 +141,58 @@ function QueryItemInstance(player)
 	local itemsArraySQL = CharDBQuery("SELECT bag FROM character_inventory")
 	print("Making a list of all bags guid's...")
 	if itemsArraySQL then
-        repeat
+        repeat				-- make a list of all bags item guids
             characterBagArrayLUA[n] = itemsArraySQL:GetUInt32(0)
 			if characterBagArrayLUA[n] ~= 0 and not has_value(listOfBags, characterBagArrayLUA[n]) then
-				-- make a list of all bags item guids
 				table.insert(listOfBags, characterBagArrayLUA[n])
 			end
             n = n + 1
         until not itemsArraySQL:NextRow()
-    end
+	end
+	CreateBagArrayTime = GetCurrTime()
 	-- free memory
 	itemsArraySQL = nil
+
+	print("Finding gaps in guid column...")
+	--find gaps in db to fill
+	gapsArray = {}
+	gapsArraySQL = {}
+	RequiredGaps = #itemsGuidArrayLUA
+	GapsFound = 0
+	n = SearchForGapsFrom
+	m = 1
+	SearchForGapsTo = SearchForGapsFrom + PrintProgress
+	repeat
+		local itemsArraySQL = CharDBQuery("SELECT `guid` FROM `item_instance` WHERE `guid` >= "..SearchForGapsFrom.." AND `guid` < "..SearchForGapsTo)
+
+		oldN = n
+		if itemsArraySQL then
+			repeat
+				gapsArraySQL[n] = itemsArraySQL:GetUInt32(0)
+				--print("Building gapsArraySQL: n="..n.." gapsArraySQL[n]="..gapsArraySQL[n])
+				n = n + 1
+			until not itemsArraySQL:NextRow()
+		end
+
+		n = oldN
+		-- make a list of gaps in guids until enough gaps are found to sort all items
+		-------------------------------------------------------------------------------- IS FUCKY
+		repeat
+			if has_value(gapsArraySQL, n) == false then
+				table.insert(gapsArray, m)
+				--print("Gap found: "..m)
+				GapsFound = GapsFound + 1
+			end
+			n = n + 1
+			m = m + 1
+		until n == SearchForGapsTo
+
+		SearchForGapsTo = SearchForGapsTo + PrintProgress
+		SearchForGapsFrom = SearchForGapsFrom + PrintProgress
+	until GapsFound >= RequiredGaps or GapsFound > itemsGuidArrayLUA[#itemsGuidArrayLUA]
+
+	CreateGapsArrayTime = GetCurrTime()
+
 end
 
 function ToInteger(number)
@@ -122,7 +200,7 @@ function ToInteger(number)
 end
 
 -- checks if an array contains a given value
-function has_value (tab, val)
+function has_value(tab, val)
     for index, value in ipairs(tab) do
         if value == val then
             return true
@@ -136,7 +214,7 @@ function WriteSQL()
 	-- open and if existant wipe sortguid.sql
 	local sqlfile = io.open("SortGuid.sql", "w+")
 	-- choose the right scheme
-	sqlfile:write("USE `"..schemename.."`;\n")
+	sqlfile:write("USE `"..Schemename.."`;\n")
 	sqlfile:write("\n")
 	-- add a sql command which allows for unsafe update commands
 	sqlfile:write("SET SQL_SAFE_UPDATES = 0;\n")
@@ -181,46 +259,60 @@ function WriteSQL()
 		end
 	end
 
-	if ItemLimit == 1 then goto skip2 end
+	if ItemLimit == 1 then
+		print("Skipping all items since flag ItemLimit = 1")
+		goto skip2
+	end
+
+	GapCounter = 1
 
 	repeat
 		-- if the line is already in the right place dont bother writing again
-		if SortCounter == itemsGuidArrayLUA[SortCounter] then
+
+		--print("SortCounter="..SortCounter.." StartFromGuid="..StartFromGuid.." itemsGuidArrayLUA[SortCounter]="..itemsGuidArrayLUA[SortCounter])
+		if SortCounter + StartFromGuid - 1 == itemsGuidArrayLUA[SortCounter] then
+			--print("Skipped")
 			goto skip
 		end
 
 		-- Write to the SQL script:
 		-- Sort item guids
-		sqlfile:write("UPDATE `item_instance` SET `guid` = "..SortCounter.." WHERE `guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
-		-- adjust item references in player inventory
-		sqlfile:write("UPDATE `character_inventory` SET `item` = "..SortCounter.." WHERE `item` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
-		-- adjust item references in guild banks
-		sqlfile:write("UPDATE `guild_bank_item` SET `item_guid` = "..SortCounter.." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
-		-- adjust bag references in player inventory, if the item is a bag
-		if has_value(listOfBags, itemsGuidArrayLUA[SortCounter]) then
-			sqlfile:write("UPDATE `character_inventory` SET `bag` = "..SortCounter.." WHERE `bag` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
-		end
-		-- adjust mail_items if the item is in a letter
-		sqlfile:write("UPDATE `mail_items` SET `item_guid` = "..SortCounter.." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+		if gapsArray[GapCounter] ~= nil then
+			--print("gapsArray[GapCounter]="..gapsArray[GapCounter].." itemsGuidArrayLUA[SortCounter]="..itemsGuidArrayLUA[SortCounter])
+			if gapsArray[GapCounter] < itemsGuidArrayLUA[SortCounter] then
 
-		-- if changing custom tables is intended..
-		if ChangeCustom == true then
-			for diggit,_ in ipairs(CustomTableNames) do
-				-- ..and there is both a table and a column set for the index..
-				if CustomTableNames[diggit] ~= nil and CustomColumnNames[diggit] ~= nil then
-					-- ..then change the guids in that column as well
-					TermToWrite = "UPDATE `"..CustomTableNames[diggit].."` SET `"..CustomColumnNames[diggit]
-					TermToWrite = TermToWrite.."` = "..SortCounter.." WHERE `"..CustomColumnNames[diggit].."` = "
-					TermToWrite = TermToWrite..itemsGuidArrayLUA[SortCounter]..";\n"
-					sqlfile:write(TermToWrite)
-				-- if there is a table specified for a certain index, but no column print an error..
-				else
-					if player then
-						-- ..in the clients chat if the script was started from there..
-						player:SendBroadcastMessage("Error in CostumTableNames or CustomColumnNames: "..diggit)
-					else
-						-- ..or in the worldserver console if not.
-						print("Error in CostumTableNames or CustomColumnNames: "..diggit)
+				sqlfile:write("UPDATE `item_instance` SET `guid` = "..gapsArray[SortCounter].." WHERE `guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+				-- adjust item references in player inventory
+				sqlfile:write("UPDATE `character_inventory` SET `item` = "..gapsArray[SortCounter].." WHERE `item` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+				-- adjust item references in guild banks
+				sqlfile:write("UPDATE `guild_bank_item` SET `item_guid` = "..gapsArray[SortCounter].." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+				-- adjust bag references in player inventory, if the item is a bag
+				if has_value(listOfBags, itemsGuidArrayLUA[SortCounter]) then
+					sqlfile:write("UPDATE `character_inventory` SET `bag` = "..gapsArray[SortCounter].." WHERE `bag` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+				end
+				-- adjust mail_items if the item is in a letter
+				sqlfile:write("UPDATE `mail_items` SET `item_guid` = "..gapsArray[SortCounter].." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+
+				-- if changing custom tables is intended..
+				if ChangeCustom == true then
+					for diggit,_ in ipairs(CustomTableNames) do
+						-- ..and there is both a table and a column set for the index..
+						if CustomTableNames[diggit] ~= nil and CustomColumnNames[diggit] ~= nil then
+							-- ..then change the guids in that column as well
+							TermToWrite = "UPDATE `"..CustomTableNames[diggit].."` SET `"..CustomColumnNames[diggit]
+							TermToWrite = TermToWrite.."` = "..gapsArray[SortCounter].." WHERE `"..CustomColumnNames[diggit].."` = "
+							TermToWrite = TermToWrite..itemsGuidArrayLUA[SortCounter]..";\n"
+							sqlfile:write(TermToWrite)
+						-- if there is a table specified for a certain index, but no column print an error..
+						else
+							if player then
+								-- ..in the clients chat if the script was started from there..
+								player:SendBroadcastMessage("Error in CostumTableNames or CustomColumnNames: "..diggit)
+							else
+								-- ..or in the worldserver console if not.
+								print("Error in CostumTableNames or CustomColumnNames: "..diggit)
+							end
+						end
 					end
 				end
 			end
@@ -239,8 +331,10 @@ function WriteSQL()
 			end
 		end
 
+		GapCounter = GapCounter + 1
 		SortCounter = SortCounter + 1
 		sqlfile:write("\n")
+
 	until SortCounter == ItemCounter
 
 	::skip2::
