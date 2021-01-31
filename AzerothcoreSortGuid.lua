@@ -165,7 +165,7 @@ function QueryItemInstance(player)
 	repeat
 		local itemsArraySQL = CharDBQuery("SELECT `guid` FROM `item_instance` WHERE `guid` >= "..SearchForGapsFrom.." AND `guid` < "..SearchForGapsTo)
 
-		oldN = n
+		m = n
 		if itemsArraySQL then
 			repeat
 				gapsArraySQL[n] = itemsArraySQL:GetUInt32(0)
@@ -174,18 +174,22 @@ function QueryItemInstance(player)
 			until not itemsArraySQL:NextRow()
 		end
 
-		n = oldN
 		-- make a list of gaps in guids until enough gaps are found to sort all items
-		-------------------------------------------------------------------------------- IS FUCKY
 		repeat
-			if has_value(gapsArraySQL, n) == false then
+
+			--if has_value(gapsArraySQL, m) == false then
+			--	printstring = "false"
+			--else
+			--	printstring = "true"
+			--end
+			--print("o = "..m.." / has_value(gapsArraySQL, o) = "..printstring)
+			if has_value(gapsArraySQL, m) == false then
 				table.insert(gapsArray, m)
 				--print("Gap found: "..m)
 				GapsFound = GapsFound + 1
 			end
-			n = n + 1
 			m = m + 1
-		until n == SearchForGapsTo
+		until m == SearchForGapsTo
 
 		SearchForGapsTo = SearchForGapsTo + PrintProgress
 		SearchForGapsFrom = SearchForGapsFrom + PrintProgress
@@ -271,27 +275,27 @@ function WriteSQL()
 
 		--print("SortCounter="..SortCounter.." StartFromGuid="..StartFromGuid.." itemsGuidArrayLUA[SortCounter]="..itemsGuidArrayLUA[SortCounter])
 		if SortCounter + StartFromGuid - 1 == itemsGuidArrayLUA[SortCounter] then
-			--print("Skipped")
+			--("Skipped")
 			goto skip
 		end
 
 		-- Write to the SQL script:
 		-- Sort item guids
 		if gapsArray[GapCounter] ~= nil then
-			--print("gapsArray[GapCounter]="..gapsArray[GapCounter].." itemsGuidArrayLUA[SortCounter]="..itemsGuidArrayLUA[SortCounter])
+			--print("GapCounter="..GapCounter.." gapsArray[GapCounter]="..gapsArray[GapCounter].." itemsGuidArrayLUA[SortCounter]="..itemsGuidArrayLUA[SortCounter])
 			if gapsArray[GapCounter] < itemsGuidArrayLUA[SortCounter] then
 
-				sqlfile:write("UPDATE `item_instance` SET `guid` = "..gapsArray[SortCounter].." WHERE `guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+				sqlfile:write("UPDATE `item_instance` SET `guid` = "..gapsArray[GapCounter].." WHERE `guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 				-- adjust item references in player inventory
-				sqlfile:write("UPDATE `character_inventory` SET `item` = "..gapsArray[SortCounter].." WHERE `item` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+				sqlfile:write("UPDATE `character_inventory` SET `item` = "..gapsArray[GapCounter].." WHERE `item` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 				-- adjust item references in guild banks
-				sqlfile:write("UPDATE `guild_bank_item` SET `item_guid` = "..gapsArray[SortCounter].." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+				sqlfile:write("UPDATE `guild_bank_item` SET `item_guid` = "..gapsArray[GapCounter].." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 				-- adjust bag references in player inventory, if the item is a bag
 				if has_value(listOfBags, itemsGuidArrayLUA[SortCounter]) then
-					sqlfile:write("UPDATE `character_inventory` SET `bag` = "..gapsArray[SortCounter].." WHERE `bag` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+					sqlfile:write("UPDATE `character_inventory` SET `bag` = "..gapsArray[GapCounter].." WHERE `bag` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 				end
 				-- adjust mail_items if the item is in a letter
-				sqlfile:write("UPDATE `mail_items` SET `item_guid` = "..gapsArray[SortCounter].." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
+				sqlfile:write("UPDATE `mail_items` SET `item_guid` = "..gapsArray[GapCounter].." WHERE `item_guid` = "..itemsGuidArrayLUA[SortCounter].." LIMIT 1;\n")
 
 				-- if changing custom tables is intended..
 				if ChangeCustom == true then
@@ -300,7 +304,7 @@ function WriteSQL()
 						if CustomTableNames[diggit] ~= nil and CustomColumnNames[diggit] ~= nil then
 							-- ..then change the guids in that column as well
 							TermToWrite = "UPDATE `"..CustomTableNames[diggit].."` SET `"..CustomColumnNames[diggit]
-							TermToWrite = TermToWrite.."` = "..gapsArray[SortCounter].." WHERE `"..CustomColumnNames[diggit].."` = "
+							TermToWrite = TermToWrite.."` = "..gapsArray[GapCounter].." WHERE `"..CustomColumnNames[diggit].."` = "
 							TermToWrite = TermToWrite..itemsGuidArrayLUA[SortCounter]..";\n"
 							sqlfile:write(TermToWrite)
 						-- if there is a table specified for a certain index, but no column print an error..
@@ -315,6 +319,8 @@ function WriteSQL()
 						end
 					end
 				end
+				sqlfile:write("\n")
+				GapCounter = GapCounter + 1
 			end
 		end
 
@@ -331,9 +337,7 @@ function WriteSQL()
 			end
 		end
 
-		GapCounter = GapCounter + 1
 		SortCounter = SortCounter + 1
-		sqlfile:write("\n")
 
 	until SortCounter == ItemCounter
 
