@@ -57,12 +57,12 @@ For testing. Script will stop after the # of items below.
 * 2+ = # of items to sort
 
 
-´StartFromGuid = 1´
+`StartFromGuid = 1`
 
 The lowest item guid to sort. Don't start at 1 if there are few gaps.
 
 
-´SearchForGapsFrom = 1´
+`SearchForGapsFrom = 1`
 
 The lowest guid to scan for gaps. Don't start at 1 if there are few gaps.
 
