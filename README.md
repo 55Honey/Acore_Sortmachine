@@ -29,7 +29,7 @@ Add this script to your `../bin/release/lua_scripts/` directory.
 
 ## Settings in the .lua file:
 
-`schemename = "acore_characters"`
+`Schemename = "acore_characters"`
 
 Change this to the name of your character database.
 
@@ -50,10 +50,21 @@ How often the console or chat should print progression. 1000 means every 1000th 
 
 
 `ItemLimit = 0`
+
 For testing. Script will stop after the # of items below.
 * 0 = no limit
 * 1 = only fixes, no items
 * 2+ = # of items to sort
+
+
+´StartFromGuid = 1´
+
+The lowest item guid to sort. Don't start at 1 if there are few gaps.
+
+
+´SearchForGapsFrom = 1´
+
+The lowest guid to scan for gaps. Don't start at 1 if there are few gaps.
 
 
 `ChangeCustom = false`
