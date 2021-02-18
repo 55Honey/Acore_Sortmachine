@@ -138,7 +138,7 @@ function QueryItemInstance(player)
 	listOfBags = {}
 	print("Reading bags from DB...")
 	--get the character_inventory tables bag column
-	local itemsArraySQL = CharDBQuery("SELECT bag FROM character_inventory")
+	local itemsArraySQL = CharDBQuery("SELECT `bag` FROM `character_inventory` WHERE `bag` >= "..StartFromGuid)
 	print("Making a list of all bags guid's...")
 	if itemsArraySQL then
         repeat				-- make a list of all bags item guids
