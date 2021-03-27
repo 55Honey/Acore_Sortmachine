@@ -1,6 +1,6 @@
 # Acore_Sortmachine
 
-**Make sure you have decent backups! Do not run the .SQL file it produces on a live server.**
+**Make sure you have decent backups! Do not run the .SQL file it produces on a live server without testing.**
 
 * Please report your findings if you try it. Thank you!
 * Credits to Disclosurez for large scale testing.
@@ -76,3 +76,5 @@ If there is a custom table e.g. from a transmog module this must be set to true 
 `table.insert(CustomColumnNames, 1, "Test_column1")`
 
 Insert your custom tables name and column here. You can add an unlimited (in theory) number of custom spots, as long as there is a column and a table for each custom spot.
+
+#### Find me on patreon: https://www.patreon.com/Honeys
